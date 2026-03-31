@@ -43,7 +43,7 @@ parse_fund <- function(description) {
 }
 
 # cleanup investments
-investments <- read_csv("data/investments_2021_raw.csv")
+investments <- read_csv("data/raw/investments_2021_raw.csv")
 
 # change amounts to numeric
 investments <- investments |> 
@@ -52,7 +52,8 @@ investments <- investments |>
 # extract transferee info
 transferee_info <- investments$transferee |> 
   lapply(parse_transferee) %>% 
-  do.call(rbind, .)
+  do.call(rbind, .) |>
+  unique()
 
 transferee_info <- transferee_info |>
   mutate(
@@ -64,11 +65,15 @@ transferee_info <- transferee_info |>
 
 fund_info <- investments$description |>
   lapply(parse_fund) %>%
-  do.call(rbind, .)
+  do.call(rbind, .) |>
+  unique()
 
+investments <- investments |> 
+  left_join(transferee_info) |> 
+  left_join(fund_info)
 
+investments <- investments |>
+  select(transferee_name, transferee_country, fund_name, amount, page, transferee_ein, fund_ein, transferee_address)
 
+write.csv(investments, 'data/clean/investments_2021_clean.csv', row.names=FALSE)
 
-
-# cleanup stock
-stock <- read_csv("data/stock-transfers_2021_raw.csv" )

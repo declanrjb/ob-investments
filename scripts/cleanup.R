@@ -26,6 +26,22 @@ parse_transferee <- function(transferee_text) {
   return(temp)
 }
 
+parse_fund <- function(description) {
+
+  manager_text <- description |> 
+      str_extract('owns an interest in((.|\n)*)\\.', group=1) |>
+      str_trim()
+
+  fund_name <- manager_text |>
+    str_split_i('\n', 1)
+
+  fund_ein <- manager_text |>
+    str_extract('EIN:(.*)\\)', group=1) |>
+    str_trim()
+
+  return(data.frame(description, fund_name, fund_ein))
+}
+
 # cleanup investments
 investments <- read_csv("data/investments_2021_raw.csv")
 
@@ -34,10 +50,23 @@ investments <- investments |>
   mutate(amount = parse_number(amount))
 
 # extract transferee info
-transferee_info <- 
-  investments$transferee |> 
+transferee_info <- investments$transferee |> 
   lapply(parse_transferee) %>% 
   do.call(rbind, .)
+
+transferee_info <- transferee_info |>
+  mutate(
+    transferee_name = transferee_name |> str_split_i(':', -1) |> str_trim(),
+    transferee_ein = transferee_ein |> str_split_i(':', -1) |> str_trim(),
+    transferee_address = transferee_address |> str_split_i(':', -1) |> str_trim(),
+    transferee_country = transferee_country |> str_split_i('Country of Incorporation', -1) |> str_trim()
+  )
+
+fund_info <- investments$description |>
+  lapply(parse_fund) %>%
+  do.call(rbind, .)
+
+
 
 
 

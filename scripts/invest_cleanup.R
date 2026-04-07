@@ -44,6 +44,7 @@ parse_fund <- function(description) {
 
 # cleanup investments
 investments <- read_csv("data/raw/investments_2021_raw.csv")
+stocks <- read_csv('data/raw/stock-transfers_2021_raw.csv')
 
 # change amounts to numeric
 investments <- investments |> 

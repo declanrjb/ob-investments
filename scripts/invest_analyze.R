@@ -263,3 +263,65 @@ israel_exposure |>
   group_by(transferee_country) |> 
   summarize(amount = sum(amount)) |> 
   mutate(percent = amount / sum(amount))
+
+# all stripes
+stripes_df <- df |>
+  filter(fund_nicename == 'Stripes Offshore')
+
+# 60% of all stripes funds went to Israel
+stripes_df |> 
+  group_by(transferee_country) |> 
+  summarize(
+    amount = sum(amount),
+    num_comps = length(unique(transferee_name))
+  ) |> 
+  mutate(percent = amount / sum(amount))
+
+stripes_starter <- stripes_df |>
+  group_by(fund_name) |>
+  summarize(value = sum(amount)) |>
+  mutate(
+    source = 'Stripes Offshore',
+    step_from = 0,
+    step_to = 1
+  ) |>
+  rename(
+    dest = fund_name
+  )
+
+stripes_sankey <- stripes_df |>
+  rename(
+    source = fund_name,
+    dest = transferee_name,
+    value = amount
+  ) |>
+  mutate(
+    step_from = 1,
+    step_to = 2,
+    is_israeli = transferee_country == 'Israel'
+  ) |>
+  arrange(desc(is_israeli), transferee_country, desc(value))
+
+stripes_sankey$source <- stripes_sankey$source |>
+  str_replace('AIV, LP', '') |>
+  str_trim()
+
+stripes_sankey$dest <- stripes_sankey$dest |>
+  str_replace('Ltd.', '') |>
+  str_replace('Inc.', '') |>
+  str_replace('GmbH', '') |>
+  str_replace(', Ltd', '') |>
+  str_trim()
+
+# color palette for this sankey
+# Israel: e3b505
+# Canada: 91a6ff
+# Germany: ff6663
+# United Kingdom: 1f487e 
+
+
+stripes_sankey <- stripes_sankey |>
+  select(source, dest, value, step_from, step_to) |>
+  rbind(stripes_starter)
+
+write.csv(stripes_sankey, 'data/viz/stripes-sankey.csv', row.names=FALSE)

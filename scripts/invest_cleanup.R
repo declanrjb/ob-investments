@@ -76,5 +76,9 @@ investments <- investments |>
 investments <- investments |>
   select(transferee_name, transferee_country, fund_name, amount, page, transferee_ein, fund_ein, transferee_address)
 
+# clean up the OCR misread of stripes
+investments$fund_name <- investments$fund_name |>
+  str_replace('Stripes IV Offshore AIlV, LP', 'Stripes IV Offshore AIV, LP')
+
 write.csv(investments, 'data/clean/investments_2021_clean.csv', row.names=FALSE)
 

@@ -218,12 +218,13 @@ table_df <- viz_df |>
   group_by(transferee_name, transferee_country) |>
   summarize(amount = sum(amount)) |>
   left_join(company_info) |>
-  select(transferee_name, transferee_country, amount, blurb, URL) |>
+  select(transferee_name, transferee_country, amount, sector, blurb, URL) |>
   rename(
     Company = transferee_name,
     Country = transferee_country,
     Investment = amount,
-    Description = blurb
+    Description = blurb,
+    Sector = sector
   ) |>
   mutate(
     Company = paste('<a href="', URL, '">', Company, '</a>', sep='')
@@ -232,3 +233,33 @@ table_df <- viz_df |>
   arrange(desc(Investment))
 
 write.csv(table_df, 'data/viz/table_full.csv', row.names=FALSE)
+
+table_df |>
+  mutate(is_israeli = Country == 'Israel') |>
+  arrange(desc(is_israeli), desc(Investment)) |>
+  write.csv('data/viz/table_israel.csv', row.names=FALSE)
+
+# what's the fund flow-through
+israeli_transactions <- df |>
+  filter(transferee_country == 'Israel')
+
+# only two non-israeli companies flow through that fund
+israel_exposure <- df |> 
+  filter(fund_name %in% israeli_transactions$fund_name)
+
+funds_distribution <- df |>
+  group_by(fund_name) |>
+  summarize(amount = sum(amount)) |>
+  mutate(percent = amount / sum(amount)) |>
+  arrange(desc(amount))
+
+# the israel exposed funds handle a combined 3% of all that transactions that year
+# totaling $1.5M
+funds_distribution |>
+  filter(fund_name %in% israeli_transactions$fund_name)
+
+# 80% of investments through the israel exposed fund went to Israel
+israel_exposure |> 
+  group_by(transferee_country) |> 
+  summarize(amount = sum(amount)) |> 
+  mutate(percent = amount / sum(amount))

@@ -1,15 +1,11 @@
 library(tidyverse)
 library(googlesheets4)
+library(rworldmap)
 
 df <- read_csv('data/clean/investments_2021_clean.csv')
-
 trades <- read_csv('data/clean/trades_2021_clean.csv')
 
-trades$transferee_name <- trades$transferee_name %>%
-  gsub('Plotlogic Pty Ltd', 'Plotlogic Pty, Ltd', .)
-
-df$transferee_name <- df$transferee_name %>%
-  gsub('Webull Corporatoin', 'Webull Corporation', .)
+data(countryRegions)
 
 df <- df |>
   left_join(
@@ -17,6 +13,15 @@ df <- df |>
       select(transferee_name, amount, date),
     by=c('transferee_name', 'amount')
   )
+
+# bind in regions
+countries_by_region <- countryRegions |> 
+  select(ADMIN, REGION) |> 
+  rename(COUNTRY = ADMIN)
+
+df <- df |>
+  left_join(countries_by_region, by=c('transferee_country' = 'COUNTRY')) |>
+  rename(region = REGION)
 
 df$is_direct <- NA
 for (i in 1:length(df$transferee_name)) {
@@ -350,4 +355,19 @@ df |>
   group_by(sector) |>
   summarize(amount = sum(amount)) |>
   mutate(percent = amount / sum(amount)) |>
+  arrange(desc(amount))
+
+# analyze regions
+
+
+df |> 
+  filter(!is_direct) |>
+  group_by(region) |> 
+  summarize(
+    amount = sum(amount), 
+    comps = length(unique(transferee_name)),
+  ) |>
+  mutate(
+    percent_dollars = amount / sum(amount)
+  ) |>
   arrange(desc(amount))

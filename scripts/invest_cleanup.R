@@ -80,5 +80,11 @@ investments <- investments |>
 investments$fund_name <- investments$fund_name |>
   str_replace('Stripes IV Offshore AIlV, LP', 'Stripes IV Offshore AIV, LP')
 
+investments$transferee_country <- investments$transferee_country |>
+  str_replace('lreland', 'Ireland')
+
+investments$transferee_name <- investments$transferee_name %>%
+  gsub('Webull Corporatoin', 'Webull Corporation', .)
+
 write.csv(investments, 'data/clean/investments_2021_clean.csv', row.names=FALSE)
 

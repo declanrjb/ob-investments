@@ -7,4 +7,7 @@ colnames(df) <- c('transferee_name', 'date', 'amount', 'related_private_letter')
 df <- df |>
   mutate(amount = parse_number(amount))
 
+df$transferee_name <- df$transferee_name %>%
+  gsub('Plotlogic Pty Ltd', 'Plotlogic Pty, Ltd', .)
+
 write.csv(df, 'data/clean/trades_2021_clean.csv', row.names=FALSE)

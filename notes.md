@@ -10,3 +10,9 @@ regulation for first half is also for foreign corps: https://www.law.cornell.edu
 divestment sites:
 - fiduciary responsibility
 - no choice over individual companies, only in funds
+
+# accountant to talk to
+John Cole
+John Cole Accounting
+(440) 774-4534
+south main, by Thini

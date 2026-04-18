@@ -3,6 +3,21 @@ library(googlesheets4)
 
 df <- read_csv('data/clean/investments_2021_clean.csv')
 
+trades <- read_csv('data/clean/trades_2021_clean.csv')
+
+trades$transferee_name <- trades$transferee_name %>%
+  gsub('Plotlogic Pty Ltd', 'Plotlogic Pty, Ltd', .)
+
+df$transferee_name <- df$transferee_name %>%
+  gsub('Webull Corporatoin', 'Webull Corporation', .)
+
+df <- df |>
+  left_join(
+    trades |>
+      select(transferee_name, amount, date),
+    by=c('transferee_name', 'amount')
+  )
+
 df$is_direct <- NA
 for (i in 1:length(df$transferee_name)) {
   df[i,]$is_direct <- grepl(df[i,]$transferee_name, df[i,]$fund_name) | grepl(df[i,]$fund_name, df[i,]$transferee_name)
@@ -216,15 +231,19 @@ df |>
 table_df <- viz_df |>
   filter(!is_direct) |>
   group_by(transferee_name, transferee_country) |>
-  summarize(amount = sum(amount)) |>
+  summarize(
+    amount = sum(amount),
+    date = first(date)
+  ) |>
   left_join(company_info) |>
-  select(transferee_name, transferee_country, amount, sector, blurb, URL) |>
+  select(transferee_name, transferee_country, amount, sector, blurb, URL, date) |>
   rename(
     Company = transferee_name,
     Country = transferee_country,
     Investment = amount,
     Description = blurb,
-    Sector = sector
+    Sector = sector,
+    Date = date
   ) |>
   mutate(
     Company = paste('<a href="', URL, '">', Company, '</a>', sep='')
@@ -283,7 +302,8 @@ stripes_starter <- stripes_df |>
   mutate(
     source = 'Stripes Offshore',
     step_from = 0,
-    step_to = 1
+    step_to = 1,
+    fund_name = str_replace_all(fund_name, 'AIV, LP', '')
   ) |>
   rename(
     dest = fund_name
@@ -325,3 +345,9 @@ stripes_sankey <- stripes_sankey |>
   rbind(stripes_starter)
 
 write.csv(stripes_sankey, 'data/viz/stripes-sankey.csv', row.names=FALSE)
+
+df |>
+  group_by(sector) |>
+  summarize(amount = sum(amount)) |>
+  mutate(percent = amount / sum(amount)) |>
+  arrange(desc(amount))

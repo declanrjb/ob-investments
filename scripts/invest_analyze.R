@@ -14,15 +14,6 @@ df <- df |>
     by=c('transferee_name', 'amount')
   )
 
-# bind in regions
-countries_by_region <- countryRegions |> 
-  select(ADMIN, REGION) |> 
-  rename(COUNTRY = ADMIN)
-
-df <- df |>
-  left_join(countries_by_region, by=c('transferee_country' = 'COUNTRY')) |>
-  rename(region = REGION)
-
 df$is_direct <- NA
 for (i in 1:length(df$transferee_name)) {
   df[i,]$is_direct <- grepl(df[i,]$transferee_name, df[i,]$fund_name) | grepl(df[i,]$fund_name, df[i,]$transferee_name)
@@ -50,11 +41,16 @@ funds_nice <- read_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLAL
 df <- df |>
   left_join(funds_nice)
 
+# add regions to research sheet
+# read_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=1699480597#gid=1699480597', sheet='Companies research') |>
+#   left_join(countries_by_region, by=c('transferee_country' = 'COUNTRY')) |>
+#   rename(region = REGION) |>
+#   write_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=1699480597#gid=1699480597', sheet='Companies research')
 
 company_info <- read_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=1699480597#gid=1699480597', sheet='Companies research')
 
 company_info <- company_info |>
-  select(transferee_name, blurb, sector, website, flag) |>
+  select(transferee_name, blurb, sector, website, flag, region) |>
   mutate(
     URL = website,
     website = gsub('www.', '', gsub('/', '', gsub('https:', '', website)))
@@ -212,10 +208,29 @@ block_df <- viz_df |>
 
 write.csv(block_df, 'data/viz/fund_blocks.csv', row.names=FALSE)
 
-country_blocks <- viz_df |>
-  group_by(transferee_country, transferee_name) |>
+region_totals <- viz_df |>
+  group_by(region) |>
   summarize(amount = sum(amount)) |>
-  left_join(company_info)
+  mutate(
+    round_amt = case_when(
+      amount >= 1000000 ~ paste(round(amount / 1000000, 1), 'M', sep=''),
+      amount >= 1000 ~ paste(round(amount / 1000, 1), 'K', sep='')
+    ),
+    region_nicename = paste(region, ' (', round_amt, ')', sep='')
+  )
+
+country_blocks <- viz_df |>
+  group_by(region, transferee_country, transferee_name) |>
+  summarize(amount = sum(amount)) |>
+  left_join(company_info) |>
+  left_join(
+    region_totals |>
+      select(region, region_nicename),
+    by='region'
+  ) |>
+  mutate(region = region_nicename) |>
+  select(!region_nicename) |>
+  arrange(region, transferee_country, desc(amount)) 
 
 write.csv(country_blocks, 'data/viz/country_blocks.csv', row.names=FALSE)
 

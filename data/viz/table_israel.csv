@@ -1,6 +1,6 @@
 "Company","Country","Investment","Sector","Description","Date","is_israeli"
 "<a href=""https://www.fireblocks.com/"">Fireblocks Ltd.</a>","Israel",477298,"Software & Tech","Backend infrastructure for digital money transfers and cryptocurrency","2/18/2021",TRUE
-"<a href=""https://connecteam.com/"">Mobilesson Ltd.</a>","Israel",384713,"Software & Tech","HR software","12/22/2021",TRUE
+"<a href=""https://connecteam.com/"">Mobilesson Ltd.</a>","Israel",384713,"Software & Tech","Produces HR software under the alias ConnectTeam","12/22/2021",TRUE
 "<a href=""https://orca.security/"">Orca Security Ltd.</a>","Israel",239026,"Cybersecurity","Cybersecurity firm specializing in cloud security","8/4/2021",TRUE
 "<a href=""https://www.hunters.security"">Cyber Hunters Ltd.</a>","Israel",135242,"Cybersecurity","Cybersecurity software for small companies","12/6/2021",TRUE
 "<a href=""NA"">Rehab and Mental Healthcare Group B.V.</a>","Netherlands",962628,"NA","[No verifiable details]","Various",FALSE
@@ -14,7 +14,7 @@
 "<a href=""https://www.neofinancial.com/"">Neo Financial Technologies Inc.</a>","Canada",349483,"Banking","Mobile-first alternative bank","2/22/2021",FALSE
 "<a href=""NA"">Salt Pay Co Ltd.</a>","Cayman Islands",343363,"Software & Tech","Digital payment processing","3/29/2021",FALSE
 "<a href=""https://snyk.io/"">SNYK, Ltd</a>","United Kingdom",341712,"Cybersecurity","AI-first cybersecurity platform","4/26/2021",FALSE
-"<a href=""NA"">Webull Corporation</a>","Cayman Islands",333005,NA,NA,"6/10/2021",FALSE
+"<a href=""https://www.webullcorp.com/"">Webull Corporation</a>","Cayman Islands",333005,"Cryptocurrency & Stock","Online stock trading","6/10/2021",FALSE
 "<a href=""https://manypets.com"">Bought by Many Limited</a>","United Kingdom",326566,"Other","Health insurance for pets","6/4/2021",FALSE
 "<a href=""https://glovoapp.com/en"">Glovoapp23, S.L.</a>","Spain",321423,"Mobile Apps","Food delivery app","4/27/2021",FALSE
 "<a href=""https://www.getmoss.com/"">Nufin GmbH</a>","Germany",306534,"Software & Tech","Company accounting software","2/1/2021",FALSE

@@ -59,6 +59,39 @@ company_info <- company_info |>
 df <- df |>
   left_join(company_info)
 
+public_df <- df
+
+public_df <- public_df |>
+  select(
+    transferee_name, 
+    amount,
+    sector,
+    transferee_country, 
+    region,
+    transferee_address, 
+    website, 
+    transferee_ein,  
+    blurb,
+    fund_name,
+    fund_ein,
+    date
+  ) |>
+  rename(
+    Company_Name = transferee_name,
+    Country = transferee_country,
+    Region = region,
+    Amount_Dollars = amount,
+    Sector = sector,
+    Company_Address = transferee_address,
+    Company_Website = website,
+    Company_EIN = transferee_ein,
+    Fund_Name = fund_name,
+    Fund_EIN = fund_ein,
+    Date = date
+  )
+
+write.csv(public_df, 'data-public/oberlin-college_investments_2021-22.csv')
+
 # check top funds now that we've cleaned up their names
 # soleus handles almost 30% of traffic
 df |>

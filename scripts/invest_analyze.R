@@ -19,6 +19,17 @@ for (i in 1:length(df$transferee_name)) {
   df[i,]$is_direct <- grepl(df[i,]$transferee_name, df[i,]$fund_name) | grepl(df[i,]$fund_name, df[i,]$transferee_name)
 }
 
+# make data for sean
+df |>
+  select(transferee_name, transferee_country, transferee_ein, transferee_address) |>
+  unique() |>
+  write_sheet('https://docs.google.com/spreadsheets/d/1-FNB0hThjD1Q-31Lq_E6YbZqfkr6-QjQCY6AqGjt_gM/edit?gid=0#gid=0', sheet='companies')
+
+df |>
+  select(fund_name, fund_ein) |>
+  unique() |>
+  write_sheet('https://docs.google.com/spreadsheets/d/1-FNB0hThjD1Q-31Lq_E6YbZqfkr6-QjQCY6AqGjt_gM/edit?gid=0#gid=0', sheet='funds')
+
 # hand check that that's an accurate approach
 df |> 
   filter(is_direct) |> 
@@ -59,6 +70,8 @@ company_info <- company_info |>
 df <- df |>
   left_join(company_info)
 
+write.csv(df, 'data/clean/investments_w_company-info.csv', row.names=FALSE)
+
 public_df <- df
 
 public_df <- public_df |>
@@ -82,6 +95,7 @@ public_df <- public_df |>
     Region = region,
     Amount_Dollars = amount,
     Sector = sector,
+    Description = blurb,
     Company_Address = transferee_address,
     Company_Website = website,
     Company_EIN = transferee_ein,

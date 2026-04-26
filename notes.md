@@ -16,3 +16,13 @@ John Cole
 John Cole Accounting
 (440) 774-4534
 south main, by Thini
+
+# sean notes
+statements about fund management become true in last couple years even if not in this document
+pull the incorporation records
+talk to advocacy organizations to find an accountant
+
+# to-do
+confirm israeli incorp records
+make globe
+make link to docs

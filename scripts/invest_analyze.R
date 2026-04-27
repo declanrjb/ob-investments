@@ -72,6 +72,8 @@ df <- df |>
 
 write.csv(df, 'data/clean/investments_w_company-info.csv', row.names=FALSE)
 
+
+
 public_df <- df
 
 public_df <- public_df |>
@@ -294,23 +296,29 @@ df |>
   arrange(transferee_country, transferee_name) |>
   write_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?usp=sharing', sheet='end_companies')
 
+filing_urls <- read_csv('data/viz/company_filings.csv')
+
 # make a searchable table
 table_df <- viz_df |>
   filter(!is_direct) |>
+  left_join(filing_urls) |>
   group_by(transferee_name, transferee_country) |>
   summarize(
     amount = sum(amount),
-    date = first(date)
+    date = first(date),
+    filing_url = first(filing_url)
   ) |>
+  mutate(filing_url = paste('<a href="', filing_url, '">View</a>', sep='')) |>
   left_join(company_info) |>
-  select(transferee_name, transferee_country, amount, sector, blurb, URL, date) |>
+  select(transferee_name, transferee_country, amount, sector, blurb, URL, date, filing_url) |>
   rename(
     Company = transferee_name,
     Country = transferee_country,
     Investment = amount,
     Description = blurb,
     Sector = sector,
-    Date = date
+    Date = date,
+    `Original Filing` = filing_url
   ) |>
   mutate(
     Company = paste('<a href="', URL, '">', Company, '</a>', sep='')
@@ -322,7 +330,7 @@ write.csv(table_df, 'data/viz/table_full.csv', row.names=FALSE)
 
 table_df |>
   mutate(is_israeli = Country == 'Israel') |>
-  arrange(desc(is_israeli), desc(Investment)) |>
+  arrange(desc(Investment)) |>
   write.csv('data/viz/table_israel.csv', row.names=FALSE)
 
 # what's the fund flow-through

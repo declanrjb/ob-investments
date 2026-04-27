@@ -25,4 +25,5 @@ talk to advocacy organizations to find an accountant
 # to-do
 confirm israeli incorp records
 make globe
-make link to docs
+fact check line by line
+comment to the college

@@ -89,3 +89,18 @@ geo_df <- df |>
   filter(!is.na(lat))
 
 write.csv(geo_df, 'data/viz/globe.csv', row.names=FALSE)
+
+# make the all company sankey
+df |>
+  group_by(fund_nicename) |>
+  summarize(branches = length(unique(fund_name))) |>
+  mutate(
+    has_branches = branches > 1
+  )
+
+
+
+df |>
+  group_by(fund_nicename, fund_name) |>
+  summarize(amount = sum(amount)) |>
+  arrange(fund_nicename, fund_name)

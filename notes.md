@@ -23,7 +23,7 @@ pull the incorporation records
 talk to advocacy organizations to find an accountant
 
 # to-do
-confirm israeli incorp records
-make globe
+hand-check records
 fact check line by line
-comment to the college
+confirm incorp records for stripes offshore
+make variable sankey

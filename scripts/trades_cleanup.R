@@ -2,7 +2,7 @@ library(tidyverse)
 
 df <- read_csv('data/raw/stock-transfers_2021_raw.csv')
 
-colnames(df) <- c('transferee_name', 'date', 'amount', 'related_private_letter')
+colnames(df) <- c('transferee_name', 'date', 'amount', 'related_private_letter', 'page')
 
 df <- df |>
   mutate(amount = parse_number(amount))

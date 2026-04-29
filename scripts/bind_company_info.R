@@ -1,6 +1,19 @@
 df <- read_csv('data/clean/investments_2021_clean.csv')
 trades <- read_csv('data/clean/trades_2021_clean.csv')
 
+# trades |>
+#   write_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=1903505919#gid=1903505919', sheet='fact check - trades')
+
+# df |>
+#   write_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=1903505919#gid=1903505919', sheet='fact check - investments')
+
+trades <- read_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=1903505919#gid=1903505919', sheet='fact check - trades')
+df <- read_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=1903505919#gid=1903505919', sheet='fact check - investments')
+
+df <- df |>
+  select(!hand_check) |>
+  mutate(is_direct = !is.na(is_direct))
+
 data(countryRegions)
 
 df <- df |>
@@ -9,27 +22,6 @@ df <- df |>
       select(transferee_name, amount, date),
     by=c('transferee_name', 'amount')
   )
-
-df$is_direct <- NA
-for (i in 1:length(df$transferee_name)) {
-  df[i,]$is_direct <- grepl(df[i,]$transferee_name, df[i,]$fund_name) | grepl(df[i,]$fund_name, df[i,]$transferee_name)
-}
-
-# make data for sean
-df |>
-  select(transferee_name, transferee_country, transferee_ein, transferee_address) |>
-  unique() |>
-  write_sheet('https://docs.google.com/spreadsheets/d/1-FNB0hThjD1Q-31Lq_E6YbZqfkr6-QjQCY6AqGjt_gM/edit?gid=0#gid=0', sheet='companies')
-
-df |>
-  select(fund_name, fund_ein) |>
-  unique() |>
-  write_sheet('https://docs.google.com/spreadsheets/d/1-FNB0hThjD1Q-31Lq_E6YbZqfkr6-QjQCY6AqGjt_gM/edit?gid=0#gid=0', sheet='funds')
-
-# hand check that that's an accurate approach
-df |> 
-  filter(is_direct) |> 
-  select(transferee_name, fund_name)
 
 # trim all that legal junk off the fund names
 # check this with the accountant
@@ -65,8 +57,5 @@ company_info <- company_info |>
 
 df <- df |>
   left_join(company_info)
-
-# df |>
-#   write_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=437275480#gid=437275480', sheet='fact check - disclosure parsing')
 
 write.csv(df, 'data/clean/investments_w_company-info.csv', row.names=FALSE)

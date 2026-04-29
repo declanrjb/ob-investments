@@ -23,5 +23,5 @@ pull the incorporation records
 talk to advocacy organizations to find an accountant
 
 # to-do
-hand-check records
 fact check line by line
+geoid that one company in turkey

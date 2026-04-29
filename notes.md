@@ -25,6 +25,3 @@ talk to advocacy organizations to find an accountant
 # to-do
 hand-check records
 fact check line by line
-confirm incorp records for stripes offshore
-
-# kelly grotke

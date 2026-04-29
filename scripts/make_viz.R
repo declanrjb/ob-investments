@@ -12,6 +12,11 @@ company_info <- company_info |>
 
 df <- read_csv('data/clean/investments_w_company-info.csv')
 
+# remove the direct investments in funds
+df <- df |>
+  filter(!is_direct)
+
+# breakout for the filings for doc reference in the github repo
 df |>
   select(transferee_name, page) |>
   mutate(
@@ -32,6 +37,7 @@ df |>
   ) |>
   write.csv('data/viz/company_filings.csv', row.names=FALSE)
 
+# perform geocoding for the globe
 # df |>
 #   select(transferee_name, transferee_country, transferee_address) |>
 #   unique() |>
@@ -40,6 +46,8 @@ df |>
 # manual address cleanup step
 
 df_geo <- read_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=19455493#gid=19455493', sheet='Company geoid')
+
+# REMEMBER: drop direct funds from this
 
 # computational geocoding
 df_geo <- df_geo |>
@@ -91,16 +99,75 @@ geo_df <- df |>
 write.csv(geo_df, 'data/viz/globe.csv', row.names=FALSE)
 
 # make the all company sankey
-df |>
+fund_has_branches <- df |>
   group_by(fund_nicename) |>
   summarize(branches = length(unique(fund_name))) |>
   mutate(
     has_branches = branches > 1
+  ) |>
+  select(fund_nicename, has_branches)
+
+sankey_df <- df |>
+  filter(!is_direct) |>
+  select(fund_nicename, fund_name, transferee_name, transferee_country, amount) |>
+  left_join(fund_has_branches)
+
+funds_to_comps <- sankey_df |>
+  filter(!has_branches) |>
+  group_by(fund_nicename, transferee_name) |>
+  summarize(
+    amount = sum(amount),
+    transferee_country = first(transferee_country),
+    overseeing_fund = first(fund_nicename)
+  ) |>
+  mutate(
+    step_from=1,
+    step_to=3
+  ) |>
+  rename(
+    src = fund_nicename,
+    dest = transferee_name
   )
 
-
-
-df |>
+funds_to_branches <- sankey_df |>
+  filter(has_branches) |>
   group_by(fund_nicename, fund_name) |>
-  summarize(amount = sum(amount)) |>
-  arrange(fund_nicename, fund_name)
+  summarize(
+    amount = sum(amount),
+    overseeing_fund = first(fund_nicename)
+  ) |>
+  mutate(
+    step_from=1,
+    step_to=2,
+    transferee_country = 'Not Applicable'
+  ) |>
+  rename(
+    src = fund_nicename,
+    dest = fund_name
+  )
+
+branches_to_comps <- sankey_df |>
+  filter(has_branches) |>
+  group_by(fund_name, transferee_name) |>
+  summarize(
+    amount = sum(amount),
+    transferee_country = first(transferee_country),
+    overseeing_fund = first(fund_nicename)
+  ) |>
+  mutate(
+    step_from=2,
+    step_to=3
+  ) |>
+  rename(
+    src = fund_name,
+    dest = transferee_name
+  )
+
+sankey_output <- rbind(
+  funds_to_comps,
+  funds_to_branches,
+  branches_to_comps
+) |>
+  arrange(src, dest, desc(amount))
+
+write.csv(sankey_output, 'data/viz/sankey_all.csv', row.names=FALSE)

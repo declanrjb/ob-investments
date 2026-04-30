@@ -12,6 +12,6 @@ Reporters reviewed the entire dataset for accuracy. Two errors were found, both 
 
 Reporters matched company details given in the documents to company websites and mission statements using a combination of Google Search, national business registries, and SEC EDGAR filings. To make a positive match, reporters required two points of identification, typically a company's name and physical address. In 11 cases, reporters were not able to verify a company or fund's real-world profile to this standard of accuracy. Those entities are listed under "[No verifiable details]." 
 
-Reporters categorized the companies into sectors based on their websites and mission statements. The resulting data was cleaned and processed in R, and visualized using Flourish.
+Reporters categorized the companies into sectors based on their websites and mission statements. The resulting data was cleaned and processed in R and visualized with Flourish.
 
 Read the story.

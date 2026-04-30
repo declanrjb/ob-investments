@@ -37,6 +37,107 @@ df |>
   ) |>
   write.csv('data/viz/company_filings.csv', row.names=FALSE)
 
+# full table
+filing_urls <- read_csv('data/viz/company_filings.csv')
+
+table_df <- viz_df |>
+  filter(!is_direct) |>
+  left_join(filing_urls) |>
+  group_by(transferee_name, transferee_country) |>
+  summarize(
+    amount = sum(amount),
+    date = first(date),
+    filing_url = first(filing_url)
+  ) |>
+  mutate(filing_url = paste('<a href="', filing_url, '">View</a>', sep='')) |>
+  left_join(company_info) |>
+  select(transferee_name, transferee_country, amount, sector, blurb, URL, date, filing_url) |>
+  rename(
+    Company = transferee_name,
+    Country = transferee_country,
+    Investment = amount,
+    Description = blurb,
+    Sector = sector,
+    Date = date,
+    `Original Filing` = filing_url
+  ) |>
+  mutate(
+    Company = paste('<a href="', URL, '">', Company, '</a>', sep='')
+  ) |>
+  select(!URL) |>
+  arrange(desc(Investment))
+
+write.csv(table_df, 'data/viz/table_full.csv', row.names=FALSE)
+
+# israeli table
+table_df |>
+  mutate(is_israeli = Country == 'Israel') |>
+  arrange(desc(Investment)) |>
+  write.csv('data/viz/table_israel.csv', row.names=FALSE)
+
+# stripes sankey
+stripes_df <- df |>
+  filter(fund_nicename == 'Stripes Offshore')
+
+# 60% of all stripes funds went to Israel
+stripes_df |> 
+  group_by(transferee_country) |> 
+  summarize(
+    amount = sum(amount),
+    num_comps = length(unique(transferee_name))
+  ) |> 
+  mutate(percent = amount / sum(amount))
+
+stripes_starter <- stripes_df |>
+  group_by(fund_name) |>
+  summarize(value = sum(amount)) |>
+  mutate(
+    source = 'Stripes Offshore',
+    step_from = 0,
+    step_to = 1,
+    fund_name = str_replace_all(fund_name, 'AIV, LP', '')
+  ) |>
+  rename(
+    dest = fund_name
+  )
+
+stripes_sankey <- stripes_df |>
+  rename(
+    source = fund_name,
+    dest = transferee_name,
+    value = amount
+  ) |>
+  mutate(
+    step_from = 1,
+    step_to = 2,
+    is_israeli = transferee_country == 'Israel'
+  ) |>
+  arrange(desc(is_israeli), transferee_country, desc(value))
+
+stripes_sankey$source <- stripes_sankey$source |>
+  str_replace('AIV, LP', '') |>
+  str_trim()
+
+stripes_sankey$dest <- stripes_sankey$dest |>
+  str_replace('Ltd.', '') |>
+  str_replace('Inc.', '') |>
+  str_replace('GmbH', '') |>
+  str_replace(', Ltd', '') |>
+  str_trim()
+
+# color palette for this sankey
+# Israel: e3b505
+# Canada: 91a6ff
+# Germany: ff6663
+# United Kingdom: 1f487e 
+
+
+stripes_sankey <- stripes_sankey |>
+  select(source, dest, value, step_from, step_to) |>
+  rbind(stripes_starter)
+
+write.csv(stripes_sankey, 'data/viz/stripes-sankey.csv', row.names=FALSE)
+
 # perform geocoding for the globe
 # df |>
 #   select(transferee_name, transferee_country, transferee_address) |>
@@ -98,76 +199,48 @@ geo_df <- df |>
 
 write.csv(geo_df, 'data/viz/globe.csv', row.names=FALSE)
 
-# make the all company sankey
-fund_has_branches <- df |>
-  group_by(fund_nicename) |>
-  summarize(branches = length(unique(fund_name))) |>
+# sector blocks
+sector_labels <- df |>
+  group_by(sector) |>
+  summarize(amount = sum(amount)) |>
   mutate(
-    has_branches = branches > 1
+    amount_m = round(amount / 1000000, 1),
+    sector_nicename = paste(sector, ' ($', amount_m, 'M)', sep='')
   ) |>
-  select(fund_nicename, has_branches)
+  select(sector, sector_nicename)
 
-sankey_df <- df |>
-  filter(!is_direct) |>
-  select(fund_nicename, fund_name, transferee_name, transferee_country, amount) |>
-  left_join(fund_has_branches)
+sector_blocks <- df |>
+  filter(sector != 'NA') |>
+  left_join(sector_labels) |>
+  group_by(sector_nicename, transferee_name) |>
+  summarize(amount = sum(amount)) |>
+  left_join(company_info)
 
-funds_to_comps <- sankey_df |>
-  filter(!has_branches) |>
-  group_by(fund_nicename, transferee_name) |>
-  summarize(
-    amount = sum(amount),
-    transferee_country = first(transferee_country),
-    overseeing_fund = first(fund_nicename)
-  ) |>
+write.csv(sector_blocks, 'data/viz/sector_blocks.csv', row.names=FALSE)
+
+# country blocks
+region_totals <- df |>
+  group_by(region) |>
+  summarize(amount = sum(amount)) |>
   mutate(
-    step_from=1,
-    step_to=3
-  ) |>
-  rename(
-    src = fund_nicename,
-    dest = transferee_name
+    round_amt = case_when(
+      amount >= 1000000 ~ paste(round(amount / 1000000, 1), 'M', sep=''),
+      amount >= 1000 ~ paste(round(amount / 1000, 1), 'K', sep='')
+    ),
+    region_nicename = paste(region, ' (', round_amt, ')', sep='')
   )
 
-funds_to_branches <- sankey_df |>
-  filter(has_branches) |>
-  group_by(fund_nicename, fund_name) |>
-  summarize(
-    amount = sum(amount),
-    overseeing_fund = first(fund_nicename)
+country_blocks <- df |>
+  group_by(region, transferee_country, transferee_name) |>
+  summarize(amount = sum(amount)) |>
+  left_join(company_info) |>
+  left_join(
+    region_totals |>
+      select(region, region_nicename),
+    by='region'
   ) |>
-  mutate(
-    step_from=1,
-    step_to=2,
-    transferee_country = 'Not Applicable'
-  ) |>
-  rename(
-    src = fund_nicename,
-    dest = fund_name
-  )
+  mutate(region = region_nicename) |>
+  select(!region_nicename) |>
+  arrange(region, transferee_country, desc(amount)) 
 
-branches_to_comps <- sankey_df |>
-  filter(has_branches) |>
-  group_by(fund_name, transferee_name) |>
-  summarize(
-    amount = sum(amount),
-    transferee_country = first(transferee_country),
-    overseeing_fund = first(fund_nicename)
-  ) |>
-  mutate(
-    step_from=2,
-    step_to=3
-  ) |>
-  rename(
-    src = fund_name,
-    dest = transferee_name
-  )
-
-sankey_output <- rbind(
-  funds_to_comps,
-  funds_to_branches,
-  branches_to_comps
-) |>
-  arrange(src, dest, desc(amount))
-
-write.csv(sankey_output, 'data/viz/sankey_all.csv', row.names=FALSE)
+write.csv(country_blocks, 'data/viz/country_blocks.csv', row.names=FALSE)

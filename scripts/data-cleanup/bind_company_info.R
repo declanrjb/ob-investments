@@ -1,3 +1,7 @@
+library(tidyverse)
+library(googlesheets4)
+library(rworldmap)
+
 df <- read_csv('data/clean/investments_2021_clean.csv')
 trades <- read_csv('data/clean/trades_2021_clean.csv')
 

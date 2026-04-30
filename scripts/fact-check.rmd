@@ -1,20 +1,240 @@
 ```{r}
 library(tidyverse)
+df <- read_csv('data/clean/investments_w_company-info.csv')
 ```
 
 In the 2021-22 fiscal year, Oberlin College’s fund managers invested more than $1.2 million in Israeli companies
 
+```{r}
+df |>
+    filter(transferee_country == 'Israel') |>
+    pull(amount) |>
+    sum()
+```
+
 The Review’s investigation identifies more than $52 million of the College’s investments in 69 companies around the world
+
+```{r}
+# $52 million of the College's investments
+df |>
+    pull(amount) |>
+    sum()
+
+# 69 companies
+df |>
+    pull(transferee_name) |>
+    unique() |>
+    length()
+```
 
 The Review’s investigation found that, in the 2021-22 fiscal year, all investments in Israeli companies in the College’s portfolio were made through two branches of the same fund: Stripes Management
 
-Among the 27 funds that made investments on the College’s behalf that year
+```{r}
+df |>
+    filter(transferee_country == 'Israel') |>
+    pull(fund_name) |>
+    unique()
+```
+
+Among the 22 funds that made investments on the College’s behalf that year
+
+```{r}
+df |>
+    filter(!is.na(fund_nicename)) |>
+    arrange(fund_nicename) |>
+    pull(fund_nicename) |>
+    unique() |>
+    length()
+```
 
 only Stripes invested in Israeli companies
 
-Stripes invested a total of $2 million on the College’s behalf
+```{r}
+df |>
+    filter(transferee_country == 'Israel') |>
+    pull(fund_name) |>
+    unique()
+```
+
+Stripes invested a total of $2.1 million on the College’s behalf
+
+```{r}
+df |>
+    filter(fund_nicename == 'Stripes Offshore') |>
+    pull(amount) |>
+    sum()
+```
 
 of which 60% ($1.2 million) went to Israeli companies
 
+```{r}
+df |>
+    filter(fund_nicename == 'Stripes Offshore') |>
+    group_by(transferee_country) |>
+    summarize(
+        amount = sum(amount),
+    ) |>
+    ungroup() |>
+    mutate(
+        percent = amount / sum(amount)
+    ) |>
+    arrange(desc(amount))
+```
+
 The remaining $0.8 million went to four companies in Canada, Germany, and the United Kingdom, respectively
 
+```{r}
+# the remaining $0.8 million
+df |>
+    filter(fund_nicename == 'Stripes Offshore') |>
+    filter(transferee_country != 'Israel') |>
+    pull(amount) |>
+    sum()
+
+# four companies in Canada, Germany, and the United Kingdom
+df |>
+    filter(fund_nicename == 'Stripes Offshore') |>
+    filter(transferee_country != 'Israel') |>
+    group_by(transferee_country) |>
+    summarize(num_comps = length(unique(transferee_name)))
+```
+
+Israeli companies made up about 7 percent of the College’s indirect foreign investments in the 2021–--22 fiscal year.
+
+```{r}
+df |>
+    filter(!is_direct) |>
+    group_by(transferee_country) |>
+    summarize(
+        amount = sum(amount)
+    ) |>
+    mutate(percent = amount / sum(amount)) |>
+    filter(transferee_country == 'Israel')
+```
+
+The documents detail financial holdings in a total of 64 companies managed through 23 funds
+
+```{r}
+# 69 companies
+df |>
+    filter(!is_direct) |>
+    pull(transferee_name) |>
+    unique() |>
+    length()
+
+df |>
+    pull(fund_nicename) |>
+    unique() |>
+    length()
+```
+
+totaling a combined $17.5 million
+
+```{r}
+df |>
+    filter(!is_direct) |>
+    pull(amount) |>
+    sum()
+```
+
+The College invested an additional $35 million directly in five funds
+
+```{r}
+# 38 million
+df |>
+    filter(is_direct) |>
+    pull(amount) |>
+    sum()
+
+# five funds
+df |>
+    filter(is_direct) |>
+    pull(fund_name) |>
+    unique() |>
+    length()
+```
+
+all of them incorporated in the Cayman Islands
+
+```{r}
+df |>
+    filter(is_direct) |>
+    pull(transferee_country) |>
+    unique()
+```
+
+Software and tech ventures led the College’s portfolio, with more than $3 million invested in companies in that sector
+
+```{r}
+df |>
+    group_by(sector) |>
+    summarize(amount = sum(amount)) |>
+    arrange(desc(amount))
+```
+
+A further $1.4 million went to cryptocurrency and stock trading platforms
+
+```{r}
+df |>
+    group_by(sector) |>
+    summarize(amount = sum(amount)) |>
+    filter(sector == 'Cryptocurrency & Stock')
+```
+
+$1.3 million to companies that develop mobile apps or games
+
+```{r}
+df |>
+    group_by(sector) |>
+    summarize(amount = sum(amount)) |>
+    filter(sector == 'Mobile Apps')
+```
+
+In June of 2021, the College’s fund managers purchased a $873,000 stake in Paper Education Company, Inc
+
+```{r}
+df |>
+    filter(transferee_name == 'Paper Education Company Inc') |>
+    select(transferee_name, date, amount)
+```
+
+Among the College’s other notable investments are the period-tracking app Clue ($161,000)
+
+```{r}
+df |>
+    filter(transferee_name == 'Clue By Biowink GmbH') |>
+    select(transferee_name, amount)
+```
+
+and Rei Do Pitaco Limited ($160,000)
+
+```{r}
+df |>
+    filter(transferee_name == 'Rei Do Pitaco Limited') |>
+    select(transferee_name, amount)
+```
+
+The College’s fund managers invested heavily in companies in Europe, with more than $10.8 million distributed to 36 companies in that region
+
+```{r}
+df |>
+    filter(!is_direct) |>
+    group_by(region) |>
+    summarize(
+        amount = sum(amount),
+        num_comps = length(unique(transferee_name))
+    ) |>
+    arrange(desc(amount))
+```
+
+North and South America followed, with a combined $3.5 million invested across 14 companies
+
+```{r}
+df |>
+    filter(!is_direct) |>
+    filter(region %in% c('North America', 'South America')) |>
+    summarize(
+        amount = sum(amount),
+        num_comps = length(unique(transferee_name))
+    )
+```

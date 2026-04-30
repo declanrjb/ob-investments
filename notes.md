@@ -24,5 +24,9 @@ talk to advocacy organizations to find an accountant
 
 # to-do
 fact check line by line
-confirm understanding of shareholder docs
+ground truth fund nicenames
 geoid that one company in turkey
+
+evidence these are current shareholders:
+https://mbblaw.co.il/en/shareholders-register/
+https://www.legalmondo.com/product/how-find-company-information-israel/

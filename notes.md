@@ -24,4 +24,5 @@ talk to advocacy organizations to find an accountant
 
 # to-do
 fact check line by line
+confirm understanding of shareholder docs
 geoid that one company in turkey

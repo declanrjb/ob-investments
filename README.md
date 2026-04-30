@@ -1,4 +1,4 @@
-Investigation identifying $52 million of Oberlin College's foreign investments.
+This investigation, published in <i>The Oberlin Review</i>, identifies more than $52 million of Oberlin College's foreign investments in 69 companies around the world. Its publication represents the public’s first access to the details of those investments, which have previously been kept a closely guarded secret of the College’s fund managers.
 
 View the data: [CSV](./data-public/oberlin-college_investments_2021-22.csv) | [Excel](./data-public/oberlin-college_investments_2021-22.xlsx) | [Online](https://public.flourish.studio/visualisation/28414505/)
 

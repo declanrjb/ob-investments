@@ -58,4 +58,7 @@ company_info <- company_info |>
 df <- df |>
   left_join(company_info)
 
+df |>
+  write_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=1903505919#gid=1903505919', sheet='START HERE')
+
 write.csv(df, 'data/clean/investments_w_company-info.csv', row.names=FALSE)

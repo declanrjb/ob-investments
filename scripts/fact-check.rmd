@@ -1,0 +1,20 @@
+```{r}
+library(tidyverse)
+```
+
+In the 2021-22 fiscal year, Oberlin College’s fund managers invested more than $1.2 million in Israeli companies
+
+The Review’s investigation identifies more than $52 million of the College’s investments in 69 companies around the world
+
+The Review’s investigation found that, in the 2021-22 fiscal year, all investments in Israeli companies in the College’s portfolio were made through two branches of the same fund: Stripes Management
+
+Among the 27 funds that made investments on the College’s behalf that year
+
+only Stripes invested in Israeli companies
+
+Stripes invested a total of $2 million on the College’s behalf
+
+of which 60% ($1.2 million) went to Israeli companies
+
+The remaining $0.8 million went to four companies in Canada, Germany, and the United Kingdom, respectively
+

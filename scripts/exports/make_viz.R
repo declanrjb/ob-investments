@@ -62,7 +62,10 @@ table_df <- df |>
     `Original Filing` = filing_url
   ) |>
   mutate(
-    Company = paste('<a href="', URL, '">', Company, '</a>', sep='')
+    Company = case_when(
+      !is.na(URL) ~ paste('<a href="', URL, '">', Company, '</a>', sep=''),
+      is.na(URL) ~ Company
+    )
   ) |>
   select(!URL) |>
   arrange(desc(Investment))
@@ -151,16 +154,16 @@ df_geo <- read_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs
 # REMEMBER: drop direct funds from this
 
 # computational geocoding
-df_geo <- df_geo |>
-  geocode(
-    street=street,
-    city=city,
-    country=country,
-    method='osm'
-  )
+# df_geo <- df_geo |>
+#   geocode(
+#     street=street,
+#     city=city,
+#     country=country,
+#     method='osm'
+#   )
 
-df_geo |>
-  write_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=19455493#gid=19455493', sheet='company coords')
+# df_geo |>
+#   write_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=19455493#gid=19455493', sheet='company coords')
 
 df_geo <- read_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=809803929#gid=809803929', sheet='company coords manual check')
 
@@ -210,7 +213,8 @@ sector_labels <- df |>
   select(sector, sector_nicename)
 
 sector_blocks <- df |>
-  filter(sector != 'NA') |>
+  filter(!is_direct) |>
+  filter(transferee_name != 'Cross Ocean Aviation Fund | (Intl) DAC') |>
   left_join(sector_labels) |>
   group_by(sector_nicename, transferee_name) |>
   summarize(amount = sum(amount)) |>
@@ -231,6 +235,7 @@ region_totals <- df |>
   )
 
 country_blocks <- df |>
+  filter(transferee_name != 'Cross Ocean Aviation Fund | (Intl) DAC') |>
   group_by(region, transferee_country, transferee_name) |>
   summarize(amount = sum(amount)) |>
   left_join(company_info) |>

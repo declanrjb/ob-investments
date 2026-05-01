@@ -14,6 +14,6 @@ Reporters matched company details given in the documents to company websites and
 
 Reporters categorized the companies into sectors based on their websites and mission statements. The resulting data was cleaned and processed in R and visualized with Flourish. 
 
-Every data analysis finding was independently reproduced by a factchecker who had not seen the original source code. Reporters verified details found in the original documents using [AUM 13F](https://aum13f.com/), [EDGAR](https://www.sec.gov/search-filings), [IAPD](https://adviserinfo.sec.gov/), and lists of shareholders purchased from the [Israeli Business Registry](https://www.gov.il/en/service/company_extract), which are available in [this repository](https://github.com/declanrjb/ob-investments/tree/main/docs/shareholder_docs).
+Every data analysis finding was independently reproduced by a factchecker who had not seen the original source code. Reporters verified details found in the original documents using [AUM 13F](https://aum13f.com/), [EDGAR](https://www.sec.gov/search-filings), [IAPD](https://adviserinfo.sec.gov/), and lists of shareholders purchased from the [Israeli Business Registry](https://www.gov.il/en/service/company_extract), which are available in [this directory](https://github.com/declanrjb/ob-investments/tree/main/docs/shareholder_docs).
 
 Read the story.

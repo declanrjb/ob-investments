@@ -40,7 +40,7 @@ df |>
 # full table
 filing_urls <- read_csv('data/viz/company_filings.csv')
 
-table_df <- viz_df |>
+table_df <- df |>
   filter(!is_direct) |>
   left_join(filing_urls) |>
   group_by(transferee_name, transferee_country) |>

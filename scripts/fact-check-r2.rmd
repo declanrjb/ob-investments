@@ -2,3 +2,250 @@
 library(tidyverse)
 df <- read_csv('data/clean/investments_w_company-info.csv')
 ```
+
+In 2021, Oberlin College’s fund managers invested more than $1.2 million in Israeli companies
+
+```{r}
+df |>
+    mutate(date = mdy(date)) |>
+    filter(year(date) == 2021) |>
+    filter(transferee_country == 'Israel') |>
+    pull(amount) |>
+    sum()
+```
+
+The Review’s investigation identifies more than $52 million of the College’s investments 
+
+```{r}
+df |>
+    pull(amount) |>
+    sum()
+```
+
+in 69 entities around the world
+
+```{r}
+df |>
+    pull(transferee_name) |>
+    unique() |>
+    length()
+```
+
+The four Israeli companies — Fireblocks, MobiLesson, Orca Security, and Cyber Hunters — are all part of the Israeli tech sector
+
+```{r}
+df |>
+    filter(transferee_country == 'Israel') |>
+    pull(sector) |>
+    unique()
+```
+
+in 2021, all investments in Israeli companies in the College’s portfolio were made through two funds managed by the same firm: Stripes Management
+
+```{r}
+df |>
+    filter(transferee_country == 'Israel') |>
+    pull(fund_name) |>
+    unique()
+
+df |>
+    filter(transferee_country == 'Israel') |>
+    pull(fund_nicename) |>
+    unique()
+```
+
+Among the 25 firms that made investments on the College’s behalf that year, 
+
+```{r}
+df |>
+    pull(fund_nicename) |>
+    unique() |>
+    length()
+```
+
+only Stripes invested in Israeli companies
+
+```{r}
+df |>
+    filter(transferee_country == 'Israel') |>
+    pull(fund_nicename) |>
+    unique()
+```
+
+Stripes invested a total of $2.1 million on the College’s behalf
+
+```{r}
+df |>
+    filter(fund_nicename == 'Stripes Management') |>
+    pull(amount) |>
+    sum()
+```
+
+of which 60 percent ($1.24 million) went to Israeli companies
+
+```{r}
+df |>
+    filter(fund_nicename == 'Stripes Management') |>
+    group_by(transferee_country) |>
+    summarize(amount = sum(amount)) |>
+    mutate(percent = amount / sum(amount)) |>
+    arrange(desc(amount))
+```
+
+The remaining $0.9 million went to four companies in Canada, Germany, and the United Kingdom, respectively
+
+```{r}
+df |>
+    filter(fund_nicename == 'Stripes Management') |>
+    filter(transferee_country != 'Israel') |>
+    pull(amount) |>
+    sum()
+
+df |>
+    filter(fund_nicename == 'Stripes Management') |>
+    filter(transferee_country != 'Israel') |>
+    pull(transferee_country) |>
+    unique()
+
+df |>
+    filter(fund_nicename == 'Stripes Management') |>
+    filter(transferee_country != 'Israel') |>
+    pull(transferee_name) |>
+    unique() |>
+    length()
+```
+
+Israeli companies made up 7 percent of the College’s indirect foreign investments
+
+```{r}
+df |>
+    filter(!is_direct) |>
+    group_by(transferee_country) |>
+    summarize(amount = sum(amount)) |>
+    mutate(percent = amount / sum(amount)) |>
+    ungroup() |>
+    filter(transferee_country == 'Israel')
+```
+
+The documents detail financial holdings in a total of 64 foreign companies
+
+```{r}
+df |>
+    filter(!is_direct) |>
+    pull(transferee_name) |>
+    unique() |>
+    length()
+```
+
+managed through 20 funds
+
+```{r}
+df |>
+    filter(!is_direct) |>
+    pull(fund_nicename) |>
+    unique() |>
+    length()
+```
+
+totaling a combined $17.5 million
+
+```{r}
+df |>
+    filter(!is_direct) |>
+    pull(amount) |>
+    sum()
+```
+
+The College invested an additional $35 million directly in five funds
+
+```{r}
+df |>
+    filter(is_direct) |>
+    pull(amount) |>
+    sum()
+```
+
+all of them incorporated in the Cayman Islands
+
+```{r}
+df |>
+    filter(is_direct) |>
+    pull(transferee_country) |>
+    unique()
+```
+
+The College invested at least $4.6 million in software and tech ventures
+
+```{r}
+df |>
+    filter(sector == 'Software & Tech') |>
+    pull(amount) |>
+    sum()
+```
+
+and at least $1.4 million in cryptocurrency and stock trading platforms
+
+```{r}
+df |>
+    filter(sector == 'Cryptocurrency & Stock') |>
+    pull(amount) |>
+    sum()
+```
+
+In June 2021, the College’s fund managers invested $873,406 in Paper Education Company, Inc
+
+```{r}
+df |>
+    filter(transferee_name == 'Paper Education Company Inc') |>
+    select(transferee_name, date, amount)
+```
+
+Among the College’s other notable investments are the period-tracking app Clue ($161,483)
+
+```{r}
+df |>
+    filter(grepl('Clue', transferee_name)) |>
+    select(transferee_name, amount)
+```
+
+and Rei Do Pitaco Limited ($159,806)
+
+```{r}
+df |>
+    filter(grepl('Rei Do Pitaco', transferee_name)) |>
+    select(transferee_name, amount)
+```
+
+The College’s fund managers invested heavily in companies in Europe, with more than $10.8 million distributed to 36 companies in that region
+
+```{r}
+df |>
+    filter(!is_direct) |>
+    group_by(region) |>
+    summarize(
+        amount = sum(amount),
+        num_comps = length(unique(transferee_name))
+    ) |>
+    ungroup() |>
+    filter(region == 'Europe')
+```
+
+North and South America followed, with a combined $3.3 million invested across 13 companies
+
+```{r}
+df |>
+    filter(!is_direct) |>
+    group_by(region) |>
+    summarize(
+        amount = sum(amount),
+        num_comps = length(unique(transferee_name))
+    ) |>
+    ungroup() |>
+    filter(region %in% c('North America', 'South America'))
+
+df |>
+    filter(!is_direct) |>
+    filter(region %in% c('North America', 'South America')) |>
+    pull(amount) |>
+    sum()
+```

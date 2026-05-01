@@ -9,13 +9,13 @@ public_df <- public_df |>
   select(
     transferee_name, 
     amount,
-    sector,
     transferee_country, 
     region,
     transferee_address, 
     website, 
     transferee_ein,  
     blurb,
+    sector,
     fund_name,
     fund_ein,
     date
@@ -35,5 +35,5 @@ public_df <- public_df |>
     Date = date
   )
 
-write.csv(public_df, 'data-public/oberlin-college_investments_2021-22.csv')
-write.xlsx(public_df, 'data-public/oberlin-college_investments_2021-22.xlsx')
+write.csv(public_df, 'data/public/oberlin-college_investments_2021-22.csv')
+write.xlsx(public_df, 'data/public/oberlin-college_investments_2021-22.xlsx')

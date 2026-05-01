@@ -1,5 +1,6 @@
 library(tidyverse)
 library(tidygeocoder)
+library(googlesheets4)
 
 company_info <- read_sheet('https://docs.google.com/spreadsheets/d/1JB1tH2xEKbiLALWdEs7gDrBk3-ix9kdvroRfhOnic4s/edit?gid=1699480597#gid=1699480597', sheet='Companies research')
 
@@ -27,7 +28,7 @@ df |>
       gsub(' ', '_', .) %>%
       str_to_lower() |>
       str_squish(),
-    filing_url = paste('https://github.com/declanrjb/ob-investments/blob/main/docs-public/filings/', company_id, '.pdf', sep='')
+    filing_url = paste('https://github.com/declanrjb/ob-investments/blob/main/docs/filings/', company_id, '.pdf', sep='')
   ) |>
   group_by(company_id) |>
   summarize(

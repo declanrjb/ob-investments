@@ -36,11 +36,10 @@ df |>
     unique()
 ```
 
-Among the 22 funds that made investments on the College’s behalf that year
+Among the 25 firms that made investments on the College’s behalf that year
 
 ```{r}
 df |>
-    filter(!is.na(fund_nicename)) |>
     arrange(fund_nicename) |>
     pull(fund_nicename) |>
     unique() |>
@@ -81,10 +80,10 @@ df |>
     arrange(desc(amount))
 ```
 
-The remaining $0.8 million went to four companies in Canada, Germany, and the United Kingdom, respectively
+The remaining $0.9 million went to four companies in Canada, Germany, and the United Kingdom, respectively
 
 ```{r}
-# the remaining $0.8 million
+# the remaining $0.9 million
 df |>
     filter(fund_nicename == 'Stripes Offshore') |>
     filter(transferee_country != 'Israel') |>
@@ -112,7 +111,7 @@ df |>
     filter(transferee_country == 'Israel')
 ```
 
-The documents detail financial holdings in a total of 64 companies managed through 23 funds
+The documents detail financial holdings in a total of 64 companies managed through 25 funds
 
 ```{r}
 # 69 companies

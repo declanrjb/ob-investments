@@ -1,0 +1,4 @@
+```{r}
+library(tidyverse)
+df <- read_csv('data/clean/investments_w_company-info.csv')
+```

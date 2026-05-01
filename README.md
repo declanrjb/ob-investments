@@ -8,10 +8,12 @@ The Review’s investigation draws on previously unreported documents uncovered 
 
 Reporters processed the documents, which are only available as scanned pdfs, using the `pdf2image` and `pytesseract` Python libraries. Each page was first converted to an image, then fed to `pytesseract` optical character recognition (OCR). The resulting text was parsed using regular expressions and manually checked for accuracy. See the [notebook](./notebooks/extract.ipynb).
 
-Reporters reviewed the entire dataset for accuracy. Two errors were found, both confusions of the character "1" with the character "l." Both were corrected manually.
+Reporters reviewed the entire dataset for accuracy. Two parsing errors were found and corrected manually.
 
 Reporters matched company details given in the documents to company websites and mission statements using a combination of Google Search, national business registries, and SEC EDGAR filings. To make a positive match, reporters required two points of identification, typically a company's name and physical address. In 11 cases, reporters were not able to verify a company or fund's real-world profile to this standard of accuracy. Those entities are listed under "[No verifiable details]." 
 
-Reporters categorized the companies into sectors based on their websites and mission statements. The resulting data was cleaned and processed in R and visualized with Flourish.
+Reporters categorized the companies into sectors based on their websites and mission statements. The resulting data was cleaned and processed in R and visualized with Flourish. 
+
+Every data analysis finding was independently reproduced by a factchecker who had not seen the original source code. Reporters verified details found in the original documents using [AUM 13F](https://aum13f.com/), [EDGAR](https://www.sec.gov/search-filings), [IAPD](https://adviserinfo.sec.gov/), and lists of shareholders purchased from the [Israeli Business Registry](https://www.gov.il/en/service/company_extract), which are available in [this repository](https://github.com/declanrjb/ob-investments/tree/main/docs/shareholder_docs).
 
 Read the story.

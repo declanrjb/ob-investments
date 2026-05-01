@@ -23,9 +23,6 @@ pull the incorporation records
 talk to advocacy organizations to find an accountant
 
 # to-do
-fact check line by line
-ground truth fund nicenames
-geoid that one company in turkey
 
 evidence these are current shareholders:
 https://mbblaw.co.il/en/shareholders-register/

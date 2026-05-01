@@ -4,6 +4,13 @@ library(rworldmap)
 
 df <- read_csv('data/clean/investments_w_company-info.csv')
 
+df |>
+  mutate(date = mdy(date)) |>
+  filter(!is.na(date)) |>
+  summarize(
+    first = min(date),
+    last = max(date)
+  )
 
 
 # check top funds now that we've cleaned up their names

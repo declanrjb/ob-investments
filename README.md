@@ -41,6 +41,8 @@ from datetime import datetime as dt
 file = '../docs/irs_filings/990T_2021-22.pdf'
 ```
 
+Having opened the document, we define nesting doll functions for extracting larger and larger units of data. At the lowest level, we extract the text from a single page. Wrapped around that we extract structured data from a single page, parsing structure out of the extracted text. Above that, we extract data across multiple pages, using the functionality of the single page approach.
+
 ```python
 # use regex to extract the investments from raw text
 def process_investments(page_img, page_num):
@@ -64,8 +66,9 @@ def get_page_text(file, page_num):
     return pt.image_to_string(page)
 ```
 
+When we analyze this data we'll want the dates to be in a machine-readable format, but not all dates in the documents will be parseable (although most will be). Here, we define a soft-failure date parser that will convert the dates that match the format we expect, and replace the rest explicitly with None so we can count the number of failure instances.
+
 ```python
-# attempt to format a date string in standard unambigous format, otherwise soft parse it to None
 def format_date(x):
     try:
         date = dt.strptime(x, '%m/%d/%Y')
@@ -74,8 +77,9 @@ def format_date(x):
     return date
 ```
 
+Here we use regex to extract the second form of investment disclosures, which are listed as stock trades in the latter half of the document.
+
 ```python
-# use regex to extract the second form of investment disclosures, which are listed as stock trades in the latter half of the document
 def regex_extract_stocks(file, page_num):
     text = get_page_text(file, page_num)
     return pd.DataFrame({
@@ -87,9 +91,10 @@ def regex_extract_stocks(file, page_num):
     }, index=[page_num])
 ```
 
+In this section we define known row delimiters on the page. Farther down, we'll use these to iteratively crop the page into strips to extract values.
+We follow this approach to evade all the problems that come with line terminators when values overflow onto multiple lines (which they do sometimes, but not consistently or predictably).
+
 ```python
-# define known row delimiters on the page, used to iteratively crop the page into strips to extract values
-# this is used to evade all the problems that come with line terminators when values overflow onto multiple lines (which they do sometimes, but not consistently or predictably)
 splits = [
     '\(1\) Name of Transferor\:',
     'EIN\:',
@@ -103,32 +108,9 @@ splits = [
 ]
 ```
 
-```python
-# perform data cleaning checks on the extracted stocks
-def clean_stock_frame(df):
-    df.columns = [
-        'Transferor',
-        'Transferor_EIN',
-        'Transferor_Address',
-        'Transferee',
-        'Transferee_EIN',
-        'Transferee_Address',
-        'Transferee_Country_Incorporation',
-        'Consideration_Received',
-        'Cash'
-    ]
-
-    df['Description'] = df['Transferee_Country_Incorporation'].apply(lambda x: x.split('\n\n')[1] if len(x.split('\n\n')) > 1 else None)
-    df['Transferee_Country_Incorporation'] = df['Transferee_Country_Incorporation'].apply(lambda x: x.split('\n\n')[0])
-
-    df['Footer'] = df['Cash'].apply(lambda x: x.split('\n\n')[1] if len(x.split('\n\n')) > 1 else None)
-    df['Cash'] = df['Cash'].apply(lambda x: x.split('\n\n')[0])
-
-    return df
-```
+Having already extracted the investments form of reporting from the first half of the document, we now extract the stock trades that appear in the second half. (These are largely duplicative of the first half, but they provide some new information.)
 
 ```python
-# extract stock dataframes that appear in the latter half of the document
 def extract_stocks(file, page_num):
     text = get_page_text(file, page_num)
     
@@ -151,6 +133,31 @@ def extract_stocks(file, page_num):
     df = pd.DataFrame(result, index=[0])
     df = clean_stock_frame(df)
     df['Page'] = page_num
+
+    return df
+```
+
+As a last step, we perform data cleaning checks on the extracted stocks.
+
+```python
+def clean_stock_frame(df):
+    df.columns = [
+        'Transferor',
+        'Transferor_EIN',
+        'Transferor_Address',
+        'Transferee',
+        'Transferee_EIN',
+        'Transferee_Address',
+        'Transferee_Country_Incorporation',
+        'Consideration_Received',
+        'Cash'
+    ]
+
+    df['Description'] = df['Transferee_Country_Incorporation'].apply(lambda x: x.split('\n\n')[1] if len(x.split('\n\n')) > 1 else None)
+    df['Transferee_Country_Incorporation'] = df['Transferee_Country_Incorporation'].apply(lambda x: x.split('\n\n')[0])
+
+    df['Footer'] = df['Cash'].apply(lambda x: x.split('\n\n')[1] if len(x.split('\n\n')) > 1 else None)
+    df['Cash'] = df['Cash'].apply(lambda x: x.split('\n\n')[0])
 
     return df
 ```
@@ -179,10 +186,19 @@ import pdfplumber
 from PyPDF2 import PdfWriter, PdfReader
 ```
 
+We read in the existing dataframe built above to keep track of which entities we want to track:
+
 ```python
 df = pd.read_csv('../data/viz/company_filings.csv')
+```
+
+Then the original filing document, this time as a binary input so we can conditionally output parts of it to the local disk using pdfwriter:
+
+```python
 pdf = PdfReader(open('../docs/irs_filings/990T_2021-22.pdf', "rb"))
 ```
+
+For each row in the database of entities, we select a slice of pages from the document that are relevant to that entity. We merge those pages into one temporary document, and write it out to the disk.
 
 ```python
 for i in range(0, len(df)):

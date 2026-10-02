@@ -29,6 +29,7 @@ This story began with the watershed discovery of 171 pages of [investment disclo
 Extracting the relevant information from the documents posed a challenge, since the appendices containing the most revelatory information appeared to have been scanned and didn't respond to traditional text extraction. Instead, I used pdf2image to first convert each page to an image, then pytesseract OCR to extract the text.
 
 ```python
+# Import libraries
 import pytesseract as pt
 from pdf2image import convert_from_path
 from autocorrect import Speller
@@ -38,6 +39,7 @@ from datetime import datetime as dt
 ```
 
 ```python
+# Set the local path of the primary disclosures document
 file = '../docs/irs_filings/990T_2021-22.pdf'
 ```
 
@@ -46,23 +48,40 @@ Having opened the document, we define nesting doll functions for extracting larg
 ```python
 # use regex to extract the investments from raw text
 def process_investments(page_img, page_num):
+    # Extract a string containing all text on the page using pytesseract
     text = pt.image_to_string(page_img)
+
+    # Extract the lines on the page that begin with exactly one number (these delineate the financial disclosures lines we're interested in)
     details = pd.Series([item for item in text.split('\n') if re.search(r'^\([0-9]{1}\)', item)])
+
+    # Convert each data line to a dictionary entry, with the key being the part of the line before the colon and the value being the part of the line after
     return {k:v for k, v in zip(details.apply(lambda x: re.sub(r'^\([0-9]{1}\)', '', x.split(':')[0]).strip()), details.apply(lambda x: x.split(':', 1)[1].strip()))} | {'page': page_num}
 
 # retrieve all investments from a single page
 def get_investments_singular(file, page_num):
+
+    # Convert this particular pdf page to an image
     page = convert_from_path(file, 600, first_page=page_num, last_page=page_num)[0]
+
+    # Pass that image to process_investments to extract the data
     return pd.DataFrame(process_investments(page), index=[0])
 
 # retrieve all investments from a range of pages
 def get_investments_multiple(file, first, last):
+
+    # Convert all the relevant pages in the document to a set of images
     pages = convert_from_path(file, 600, first_page=first, last_page=last)
+
+    # Run process_investments on all of those pages and concat the resulting dataframes using a list comprehension
     return pd.concat([pd.DataFrame(process_investments(pages[i], first+i), index=[0]) for i in range(0, len(pages))])
 
 # extract the raw text from a single pdf page
 def get_page_text(file, page_num):
+
+    # Convert this particular pdf page to an image
     page = convert_from_path(file, 600, first_page=page_num, last_page=page_num)[0]
+
+    # Return the raw text from that page
     return pt.image_to_string(page)
 ```
 
@@ -71,8 +90,11 @@ When we analyze this data we'll want the dates to be in a machine-readable forma
 ```python
 def format_date(x):
     try:
+        # Attempt to parse the date in MM/DD/YYYY format
         date = dt.strptime(x, '%m/%d/%Y')
     except:
+
+        # If parsing failed, soft return None
         date = None
     return date
 ```
@@ -81,12 +103,20 @@ Here we use regex to extract the second form of investment disclosures, which ar
 
 ```python
 def regex_extract_stocks(file, page_num):
+    # Get all the raw text from the page
     text = get_page_text(file, page_num)
+
+    # Parse the text as a dataframe using regular expressions
     return pd.DataFrame({
+        # The text that occurs between the phrases "44074" and "Oberlin College (EIN"
         'transferee': text[re.search(r'44074', text).end(0):re.search(r'Oberlin College \(EIN', text).start(0)],
+        # The text that occurs between the phrases "Oberlin College (EIN" and "Ownership"
         'description': re.search(r'(Oberlin College \(EIN.*)Ownership', text, re.DOTALL).group(1),
+        # The text that occurs between the terms "Ownership" and "corporation"
         'consideration_received': re.search(r'Ownership.*corporation', text, re.DOTALL).group(0),
+        # The text that matches a dollar sign followed by one or more numbers and commas in any order
         'amount':re.search(r'\$[0-9,]+', text).group(0),
+        # The current page number
         'page': page_num
     }, index=[page_num])
 ```
@@ -112,52 +142,52 @@ Having already extracted the investments form of reporting from the first half o
 
 ```python
 def extract_stocks(file, page_num):
+    # Extract the raw text from the file
     text = get_page_text(file, page_num)
     
+    # Track where we are in the list of known headers we set above
     curr_term = 0
     result = {}
 
     # split the page into strips based on the delimiters above, and extract values from each strip
     while len(text) > 0 and curr_term < len(splits):
+
+        # Find the index in the page text where the current start header appears
         start = re.search(splits[curr_term], text).start(0)
+
+        # Trim the text to only the text that occurs after that header
         text = text[start:]
+
+        # Set the key to keep track of this information in the data dictionary as the current header being parsed
         out_key = splits[curr_term]
+
+        # Index to the next known header in the list
         curr_term += 1
+
+        # If we have not yet exceeded the list of known headers
         if curr_term < len(splits):
+
+            # Set the end index in the text to be the beginning of the next header in the pre-mapped list
             end = re.search(splits[curr_term], text).start(0)
+
+            # Take the substring between these two headers, and store it in our data dictionary
             result[f'{curr_term}_{out_key}'] = text[len(out_key.replace("\\",'')):end].strip()
+
+            # Crop the text to only the text that occurs after the end header
             text = text[end:]
         else:
+
+            # If we've reached the last header, set the whole remainder of the text, whatever it is, in the last place in the data dictionary
             result[f'{curr_term}_{out_key}'] = text[len(out_key.replace("\\",'')):].strip()
 
+    # Make a pandas dataframe from the parsed results
     df = pd.DataFrame(result, index=[0])
+
+    # Apply data cleaning checks to the dataframe (not in this pared-down example)
     df = clean_stock_frame(df)
+
+    # Keep track of the relevant page number for each record to support manual fact-checking later
     df['Page'] = page_num
-
-    return df
-```
-
-As a last step, we perform data cleaning checks on the extracted stocks.
-
-```python
-def clean_stock_frame(df):
-    df.columns = [
-        'Transferor',
-        'Transferor_EIN',
-        'Transferor_Address',
-        'Transferee',
-        'Transferee_EIN',
-        'Transferee_Address',
-        'Transferee_Country_Incorporation',
-        'Consideration_Received',
-        'Cash'
-    ]
-
-    df['Description'] = df['Transferee_Country_Incorporation'].apply(lambda x: x.split('\n\n')[1] if len(x.split('\n\n')) > 1 else None)
-    df['Transferee_Country_Incorporation'] = df['Transferee_Country_Incorporation'].apply(lambda x: x.split('\n\n')[0])
-
-    df['Footer'] = df['Cash'].apply(lambda x: x.split('\n\n')[1] if len(x.split('\n\n')) > 1 else None)
-    df['Cash'] = df['Cash'].apply(lambda x: x.split('\n\n')[0])
 
     return df
 ```
@@ -165,14 +195,18 @@ def clean_stock_frame(df):
 After extracting all of the data, I exported it to a clean CSV file for analysis in R and visualization in Flourish.
 
 ```python
-# investments of disclosure type A appear between pages 17 and 93, manually identified
+# Investments of disclosure type A appear between pages 17 and 93, manually identified
 df = get_investments_multiple(file, 17, 93)
+
+# Write the first type of disclosures to a CSV file
 df.to_csv('../data/raw/stock-transfers_2021_raw.csv', index=False)
 ```
 
 ```python
-# investments of disclosure type B appear between pages 94 and the end, manually identified
+# Investments of disclosure type B appear between pages 94 and the end, manually identified
 df = pd.concat([regex_extract_stocks(file, page) for page in range(94, 171)])
+
+# Write the second type of disclosures to a CSV file
 df.to_csv('../data/raw/investments_2021_raw.csv', index=False)
 ```
 
@@ -181,6 +215,7 @@ df.to_csv('../data/raw/investments_2021_raw.csv', index=False)
 One of my goals with this investigation was to make these documents as accessible as possible to the general public. I didn't want to just tell people the story, I wanted them to be able to read the records for themselves and see insights I might have missed. To that end, I wrote this simple script to break up the original 171 page disclosure and write out one document for each entity referenced, including all relevant records for that entity. Most investees had two separate forms of disclosure at different places within the document, and conjoining those twinned pages made it easier to build a [searchable database of disclosures](../docs/filings) in the GitHub repo.
 
 ```python
+# Import the relevant libraries
 import pandas as pd
 import pdfplumber
 from PyPDF2 import PdfWriter, PdfReader
@@ -201,13 +236,23 @@ pdf = PdfReader(open('../docs/irs_filings/990T_2021-22.pdf', "rb"))
 For each row in the database of entities, we select a slice of pages from the document that are relevant to that entity. We merge those pages into one temporary document, and write it out to the disk.
 
 ```python
+# For each row in the dataframe
 for i in range(0, len(df)):
+
+    # Make a filepath in the public filings folder, with the file name matching the cleaned company id
     outpath = f"../docs-public/filings/{df['company_id'][i]}.pdf"
+
+    # Make a list of relevant pages for this company based on the pages tracked in the dataframe, adjusting for zero-indexing in Python
     pages = [int(page)-1 for page in df['pages'][i].split(',')]
 
+    # Make an output object via PdfWriter
     output = PdfWriter()
+
+    # Make an output document containing only the pages relevant to this company
     for page in pages:
         output.add_page(pdf.pages[page])
+
+    # Write the new company document to the specified outpath in the filings directory
     with open(outpath, "wb") as outputStream:
         output.write(outputStream)
 ```

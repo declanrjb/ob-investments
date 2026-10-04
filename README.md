@@ -192,7 +192,7 @@ def extract_stocks(file, page_num):
     return df
 ```
 
-After extracting all of the data, I exported it to a clean CSV file for analysis in R and visualization in Flourish.
+After extracting all of the data, we export it to a clean CSV file for analysis in R and visualization in Flourish.
 
 ```python
 # Investments of disclosure type A appear between pages 17 and 93, manually identified

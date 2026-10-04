@@ -212,7 +212,7 @@ df.to_csv('../data/raw/investments_2021_raw.csv', index=False)
 
 ## Building a transparency database
 
-One of my goals with this investigation was to make these documents as accessible as possible to the general public. I didn't want to just tell people the story, I wanted them to be able to read the records for themselves and see insights I might have missed. To that end, I wrote this simple script to break up the original 171 page disclosure and write out one document for each entity referenced, including all relevant records for that entity. Most investees had two separate forms of disclosure at different places within the original document. Joining those twinned pages into a single spread made it easier to build a [searchable database of disclosures](../docs/filings) in the GitHub repo.
+One of my goals with this investigation was to make these documents as accessible as possible to the general public. I didn't want to just tell people the story, I wanted them to be able to read the records for themselves and see insights I might have missed. To that end, I wrote this simple script to break up the original 171 page disclosure and write out one document for each entity referenced, including all relevant records for that entity. Most investees had two separate forms of disclosure at different places within the original document. Joining those twinned pages into a single spread made it easier to build a [searchable database of disclosures](https://github.com/declanrjb/ob-investments/tree/main/docs/filings) in the GitHub repo.
 
 ```python
 # Import the relevant libraries
